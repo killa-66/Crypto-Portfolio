@@ -3,7 +3,6 @@
     return fetch(`https://api.coincap.io/v2/assets?limit=${pageSize}&offset=${(current - 1) * pageSize}`, {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer your_token'
       }
     })
       .then(response => response.json())
@@ -18,7 +17,6 @@
     return fetch(`https://api.coincap.io/v2/assets/${coin}`,{
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer your_token'
       }
     })
       .then(res => res.json())
