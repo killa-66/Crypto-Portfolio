@@ -1,18 +1,22 @@
 import { Link } from "react-router-dom"
 import cls from "./styles.module.css"
 import {Button, Input} from "antd"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { api } from "../../Api/Api"
+import { putSearch } from "../../store/mainSlice"
+import { useDispatch as useAppDispatch} from "react-redux"
 
 const Navbar = () => {
+  const dispatch = useAppDispatch()
   const inputRef: any = useRef()
   const [searchCoin, setSearchCoin] = useState("")
 
-  const hendleSearchChange = (e: any) => {
+  const handleSearchChange = (e: any) => {
     setSearchCoin(e.target.value);
   }
   
   const handleSearch = async () => {
+    dispatch(putSearch(searchCoin))
     try {
       const response = await api.searchCoin(searchCoin);
       console.log(response);
@@ -20,6 +24,15 @@ const Navbar = () => {
       console.log(error);
     }
   }
+
+  useEffect(() => {
+    console.log(searchCoin)
+    if(!searchCoin) {
+      console.log('here')
+      dispatch(putSearch(''))
+    }
+
+  }, [searchCoin])
 
   return (
     <div className={cls.navbar}>
@@ -30,7 +43,7 @@ const Navbar = () => {
         placeholder='Find coin'
         ref={inputRef}
         value={searchCoin}
-        onChange={hendleSearchChange}
+        onChange={handleSearchChange}
       ></Input>
       <Button onClick={handleSearch}>Search</Button>
     </div>
@@ -38,3 +51,7 @@ const Navbar = () => {
 }
 
 export default Navbar
+
+function useDispatch() {
+  throw new Error("Function not implemented.")
+}

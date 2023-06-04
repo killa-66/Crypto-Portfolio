@@ -1,8 +1,15 @@
-import { Table, Pagination } from "antd";
+import { Table, Pagination, Tag } from "antd";
 import { api } from "../../Api/Api";
 import { useEffect, useState } from "react";
+import { useSelector } from 'react-redux'
+import { selectSearch } from "../../store/mainSlice";
+import classes from "./styles.module.css"
+
 
 const CoinTable = () => {
+  const search = useSelector(selectSearch)
+
+  console.log("search 1 ", search)
   const [coinsData, setCoinsData] = useState([]);
   const [pagination, setPagination] = useState({
     current: 1,
@@ -41,6 +48,11 @@ const CoinTable = () => {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
+      render: ( name: string ) => (
+        <>
+          {name === search ? <div className={classes.greenCeil}>{name}</div> : <div>{name}</div>}
+        </>
+      ),
     },
     {
       title: 'Supply',

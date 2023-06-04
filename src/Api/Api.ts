@@ -14,7 +14,7 @@
       });
   }
   searchCoin(coin: string) {
-    return fetch(`https://api.coincap.io/v2/assets/${coin}`,{
+    return fetch(`https://api.coincap.io/v2/assets?search=${coin}`,{
       headers: {
         'Content-Type': 'application/json',
       }
@@ -23,9 +23,7 @@
       .then(data => {
         return data;
       })
-      .catch(error => {
-        console.log(error);
-      });
+      .catch(console.log);
   }
 }
 
