@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom"
 import cls from "./styles.module.css"
-import {Button, Input} from "antd"
+import {Button, Input, Modal} from "antd"
 import { useEffect, useRef, useState } from "react"
 import { api } from "../../Api/Api"
 import { putSearch } from "../../store/mainSlice"
@@ -10,10 +10,28 @@ const Navbar = () => {
   const dispatch = useAppDispatch()
   const inputRef: any = useRef()
   const [searchCoin, setSearchCoin] = useState("")
+  const [isOpen, setIsOpen] = useState(false)
+  const [modalInputValue, setModalInputValue] = useState(""); 
+
+  function handleOpenModal() {
+    setIsOpen(true);
+  }
+  
+  function handleOk() {
+    setIsOpen(false)
+  }
+  function handleCloseModal() {
+    setIsOpen(false)
+  }
 
   const handleSearchChange = (e: any) => {
     setSearchCoin(e.target.value);
   }
+
+  const handleModalInputChange = (e: any) => {
+    setModalInputValue(e.target.value);
+  };
+  
   
   const handleSearch = async () => {
     dispatch(putSearch(searchCoin))
@@ -36,9 +54,19 @@ const Navbar = () => {
 
   return (
     <div className={cls.navbar}>
-      <Link to="/">Main</Link>
-      <Link to="/portfolio">Portfolio</Link>
-      <Link to="/watchlist">Watchlist</Link>
+      <Button>
+        <Link  to="/">Main</Link>
+      </Button>
+      <Button>
+        <Link  to="/portfolio">Portfolio</Link>
+      </Button>
+      <Button>
+        <Link  to="/watchlist">Watchlist</Link>
+      </Button>
+      <div className={cls.navbar__balance}>
+        Balance:{modalInputValue}
+      </div>
+      <Button onClick={handleOpenModal}>Deposit</Button>
       <Input 
         placeholder='Find coin'
         ref={inputRef}
@@ -46,6 +74,18 @@ const Navbar = () => {
         onChange={handleSearchChange}
       ></Input>
       <Button onClick={handleSearch}>Search</Button>
+      <Modal
+         visible={isOpen}
+         onCancel={handleCloseModal}
+         onOk={handleOk}
+      >
+        <p className={cls.navbar__text}>Deposit funds</p>
+        <Input
+          className={cls.navbar__input}
+          value={modalInputValue}
+          onChange={handleModalInputChange}
+        />
+      </Modal>
     </div>
   )
 }

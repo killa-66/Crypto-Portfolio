@@ -1,16 +1,25 @@
 import { Table, Pagination, Tag } from "antd";
 import { api } from "../../Api/Api";
 import { useEffect, useState } from "react";
-import { useSelector } from 'react-redux'
-import { selectSearch } from "../../store/mainSlice";
+import { useDispatch, useSelector } from 'react-redux'
+import { selectSearch, addSavedCoin } from "../../store/mainSlice";
 import classes from "./styles.module.css"
 
+export interface CoinData {
+  rank: number;
+  symbol: string;
+  name: string;
+  supply: string;
+  maxSupply: string;
+  volumeUsd24Hr: string;
+  priceUsd: string;
+}
 
 const CoinTable = () => {
+  const dispatch = useDispatch()
   const search = useSelector(selectSearch)
-
-  console.log("search 1 ", search)
-  const [coinsData, setCoinsData] = useState([]);
+  const [coinsData, setCoinsData] = useState<CoinData[]>([]);
+  const [coinData, setCoinData] = useState<CoinData | null>(null); 
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10
@@ -18,6 +27,13 @@ const CoinTable = () => {
   useEffect(() => {
     fetchCoinData()
   }, [pagination.current]);
+  useEffect(() => {
+    filterCoinsData()
+  }, [search])
+
+  const handleAddToWatchList = (record: CoinData) => {
+    dispatch(addSavedCoin(record));
+  }
 
   const fetchCoinData = async (): Promise<void> => {
     try {
@@ -28,6 +44,11 @@ const CoinTable = () => {
       console.log(e)
     }
   }
+
+  const filterCoinsData = (): void => {
+    const filteredData = coinsData.filter((coin) => coin.name.toLowerCase().includes(search.toLowerCase()));
+    setCoinData(filteredData[0] || null);
+  };
 
   const handlePaginationChange = (page: number, pageSize: number) => {
     setPagination({ ...pagination, current: page});
@@ -83,21 +104,44 @@ const CoinTable = () => {
       key: 'priceUsd',
       render: (price: string) => parseFloat(price).toFixed(2)
     },
+    {
+      title: 'Watchlist',
+      key: 'Watchlist',
+      render: (text: any, record: CoinData) => (
+        <button onClick={() => handleAddToWatchList(record)}>Add to WatchList</button>
+      ),
+    }
   ];
 
   return (
     <>
-      <Table
-        dataSource={coinsData}
-        columns={columns}
-        pagination={false} 
-      />
-      <Pagination
-        current={pagination.current}
-        pageSize={pagination.pageSize}
-        total={100} 
-        onChange={handlePaginationChange}
-      />
+      {coinData ? (
+        <>
+          <Table 
+            dataSource={[coinData]} 
+            columns={columns} 
+            pagination={false} />
+          <Pagination
+            current={pagination.current}
+            pageSize={pagination.pageSize}
+            total={100}
+            onChange={handlePaginationChange}
+          />
+        </>
+      ) : (
+        <>
+          <Table 
+            dataSource={coinsData} 
+            columns={columns} 
+            pagination={false} />
+          <Pagination
+            current={pagination.current}
+            pageSize={pagination.pageSize}
+            total={100}
+            onChange={handlePaginationChange}
+          />
+        </>
+      )}
     </>
   )
 }
