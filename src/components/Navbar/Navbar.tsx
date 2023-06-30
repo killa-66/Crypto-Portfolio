@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom"
 import cls from "./styles.module.css"
 import {Button, Input, Modal} from "antd"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, ChangeEvent } from "react"
 import { api } from "../../Api/Api"
-import { putSearch } from "../../store/mainSlice"
-import { useDispatch as useAppDispatch} from "react-redux"
+import { putSearch, setBalanceAccount } from "../../store/mainSlice"
+import { useDispatch as useAppDispatch, useSelector} from "react-redux"
+import { setBalance } from "../../store/mainSlice"
 
 const Navbar = () => {
   const dispatch = useAppDispatch()
@@ -12,23 +13,25 @@ const Navbar = () => {
   const [searchCoin, setSearchCoin] = useState("")
   const [isOpen, setIsOpen] = useState(false)
   const [modalInputValue, setModalInputValue] = useState(""); 
+  const balance = useSelector(setBalanceAccount);
 
   function handleOpenModal() {
     setIsOpen(true);
   }
   
   function handleOk() {
+    dispatch(setBalance(Number(modalInputValue)));
     setIsOpen(false)
   }
   function handleCloseModal() {
     setIsOpen(false)
   }
 
-  const handleSearchChange = (e: any) => {
+  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchCoin(e.target.value);
   }
 
-  const handleModalInputChange = (e: any) => {
+  const handleModalInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     setModalInputValue(e.target.value);
   };
   
@@ -37,7 +40,7 @@ const Navbar = () => {
     dispatch(putSearch(searchCoin))
     try {
       const response = await api.searchCoin(searchCoin);
-      console.log(response);
+      
     } catch (error) {
       console.log(error);
     }
@@ -64,7 +67,7 @@ const Navbar = () => {
         <Link  to="/watchlist">Watchlist</Link>
       </Button>
       <div className={cls.navbar__balance}>
-        Balance:{modalInputValue}
+        Balance:{balance.toFixed(2)}
       </div>
       <Button onClick={handleOpenModal}>Deposit</Button>
       <Input 
@@ -91,7 +94,3 @@ const Navbar = () => {
 }
 
 export default Navbar
-
-function useDispatch() {
-  throw new Error("Function not implemented.")
-}

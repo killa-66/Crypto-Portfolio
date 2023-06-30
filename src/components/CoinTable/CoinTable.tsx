@@ -1,9 +1,10 @@
 import { Table, Pagination, Tag } from "antd";
 import { api } from "../../Api/Api";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from 'react-redux'
-import { selectSearch, addSavedCoin } from "../../store/mainSlice";
-import classes from "./styles.module.css"
+import { selectSearch, addSavedCoin, setCoinsData, selectCoinsData, selectPageSize, selectCurrentPage, setCurrentPage, setPageSize, selectSavedCoins } from "../../store/mainSlice";
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export interface CoinData {
   rank: number;
@@ -18,28 +19,30 @@ export interface CoinData {
 const CoinTable = () => {
   const dispatch = useDispatch()
   const search = useSelector(selectSearch)
-  const [coinsData, setCoinsData] = useState<CoinData[]>([]);
+  const savedCoins = useSelector(selectSavedCoins);
+  const coinsData = useSelector(selectCoinsData)
   const [coinData, setCoinData] = useState<CoinData | null>(null); 
-  const [pagination, setPagination] = useState({
-    current: 1,
-    pageSize: 10
-  })
+  const currentPage = useSelector(selectCurrentPage);
+  const pageSize = useSelector(selectPageSize);
+  
   useEffect(() => {
     fetchCoinData()
-  }, [pagination.current]);
+  }, [currentPage]);
+
   useEffect(() => {
     filterCoinsData()
   }, [search])
 
-  const handleAddToWatchList = (record: CoinData) => {
+  const handleAddToWatchList = useCallback((record: CoinData) => {
     dispatch(addSavedCoin(record));
-  }
+    toast.success("Coin added to watchlist!");
+  }, []);
 
   const fetchCoinData = async (): Promise<void> => {
     try {
-      const response = await api.getCoins(pagination.current, pagination.pageSize);
+      const response = await api.getCoins(currentPage, pageSize);
       const data = response.data
-      setCoinsData(data)
+      dispatch(setCoinsData(data))
     } catch(e) {
       console.log(e)
     }
@@ -51,10 +54,11 @@ const CoinTable = () => {
   };
 
   const handlePaginationChange = (page: number, pageSize: number) => {
-    setPagination({ ...pagination, current: page});
+    dispatch(setCurrentPage(page));
+    dispatch(setPageSize(pageSize));
   };
   
-  const columns = [
+  const columns = useMemo(() => ([
     {
       title: 'Rank',
       dataIndex: 'rank',
@@ -69,11 +73,6 @@ const CoinTable = () => {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
-      render: ( name: string ) => (
-        <>
-          {name === search ? <div className={classes.greenCeil}>{name}</div> : <div>{name}</div>}
-        </>
-      ),
     },
     {
       title: 'Supply',
@@ -87,7 +86,7 @@ const CoinTable = () => {
       key: 'maxSupply',
       render: (price: string) => {
         if(isNaN(parseFloat(price))) {
-          return 'Unknown'
+          return '-'
         } 
         return parseFloat(price).toFixed(0)
       }
@@ -107,41 +106,36 @@ const CoinTable = () => {
     {
       title: 'Watchlist',
       key: 'Watchlist',
-      render: (text: any, record: CoinData) => (
-        <button onClick={() => handleAddToWatchList(record)}>Add to WatchList</button>
-      ),
+      render: (text: any, record: CoinData) => {
+        const isCoinSaved = savedCoins.some(coin => coin.name === record.name);
+        return (
+          <button 
+            onClick={() => {
+              handleAddToWatchList(record);
+            }} 
+            disabled={isCoinSaved}
+          >
+            Add to WatchList
+          </button>
+        );
+      },
     }
-  ];
+  ]), [handleAddToWatchList, savedCoins]);
 
   return (
     <>
-      {coinData ? (
-        <>
-          <Table 
-            dataSource={[coinData]} 
-            columns={columns} 
-            pagination={false} />
-          <Pagination
-            current={pagination.current}
-            pageSize={pagination.pageSize}
-            total={100}
-            onChange={handlePaginationChange}
-          />
-        </>
-      ) : (
         <>
           <Table 
             dataSource={coinsData} 
             columns={columns} 
             pagination={false} />
           <Pagination
-            current={pagination.current}
-            pageSize={pagination.pageSize}
+            current={currentPage}
+            pageSize={pageSize}
             total={100}
             onChange={handlePaginationChange}
           />
         </>
-      )}
     </>
   )
 }
